@@ -12,3 +12,7 @@ Content-Type: application/json; charset=utf-8
     "id": 4,
     "name": "Niklas"
   }
+
+
+### Delete single
+DELETE http://localhost:3000/api/players/3
