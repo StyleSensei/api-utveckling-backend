@@ -13,6 +13,15 @@ Content-Type: application/json; charset=utf-8
     "name": "Niklas"
   }
 
+### Update single
+PUT http://localhost:3000/api/players/1
+Content-Type: application/json; charset=utf-8
+
+  {
+    
+    "name": "Foppa"
+  }
+
 
 ### Delete single
 DELETE http://localhost:3000/api/players/3
