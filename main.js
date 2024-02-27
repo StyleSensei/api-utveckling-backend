@@ -14,6 +14,7 @@ var bodyParser = require('body-parser');
 const player = require('./models/player');
 const { where } = require('sequelize');
 const { Op } = require('sequelize');
+const { validateCreatePlayer } = require('./validators/playerValidator');
 
 app.use(bodyParser.json());
 app.use(
@@ -23,26 +24,25 @@ app.use(
   })
 );
 
-async function getNextId(){
-  const players = await Player.findAll()
-    let m = Math.max(...players.map(player => player.id))
-    return m + 1
+async function getNextId() {
+  const players = await Player.findAll();
+  let m = Math.max(...players.map((player) => player.id));
+  return m + 1;
 }
 
-async function onCreatePlayer(req, res){
-const {name, jersey, position, team} = req.body
+async function onCreatePlayer(req, res) {
+  const { name, jersey, position, team } = req.body;
 
-await Player.create({
-  name:name,
-  jersey:jersey,
-  position:position,
-  team:team,
-  id:await getNextId(),
-})
-res.status(201).json({ name })
+  await Player.create({
+    name: name,
+    jersey: jersey,
+    position: position,
+    team: team,
+    id: await getNextId(),
+  });
+  res.status(201).json({ name });
 }
-app.post('/api/players', onCreatePlayer)
-
+app.post('/api/players', validateCreatePlayer, onCreatePlayer);
 
 // app.post('/api/players', async (req,res)=>{
 //     const player = await Player.create({
@@ -55,14 +55,10 @@ app.post('/api/players', onCreatePlayer)
 //     )
 //     await player.save()
 //     // players.push(player)
-    
+
 //     console.log(req.body)
 // res.status(201).send('Created')
 // });
-
-
-
-
 
 app.put('/api/players/:id', async (req, res) => {
   const id = req.params.id;
@@ -93,36 +89,50 @@ app.put('/api/players/:id', async (req, res) => {
 // });
 
 app.get('/api/players', check('q').trim().escape(), async (req, res) => {
-  const sortCol = req.query.sortCol || 'id';
+  const sortCol = req.query.sortCol || 'name';
   const sortOrder = req.query.sortOrder || 'asc';
   const q = req.query.q || '';
+
   const offset = Number(req.query.offset || 0);
-  // const page = req.query.offset || 0;
   const limit = Number(req.query.limit || 30);
 
   const players = await Player.findAndCountAll({
     where: {
-      name: {
-        [Op.like]: '%' + q + '%',
-      },
+      [Op.or]: [
+        {
+          name: {
+            [Op.like]: '%' + q + '%',
+          },
+        },
+        {
+          team: {
+            [Op.like]: '%' + q + '%',
+          },
+        },
+        {
+          position: {
+            [Op.like]: '%' + q + '%',
+          },
+        },
+      ],
     },
     order: [[sortCol, sortOrder]],
     offset: offset,
     limit: limit,
   });
   const total = players.count;
-  const result = players.rows.map(player => {
+  const result = players.rows.map((player) => {
     return {
-    id: player.id,
-    name: player.name,
-    jersey: player.jersey,
-    position: player.position,
-    team: player.team,
-    }
+      id: player.id,
+      name: player.name,
+      jersey: player.jersey,
+      position: player.position,
+      team: player.team,
+    };
   });
   return res.json({
     total,
-    result
+    result,
   });
 });
 
@@ -139,95 +149,93 @@ app.get('/api/players/:id', async (req, res) => {
   res.json(player);
 });
 
-
-
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });
 
-async function listAll() {
-  const players = await Player.findAll();
-  for (const player of players) {
-    console.log('************************');
-    console.log('ID:', player.id);
-    console.log('Name:', player.name);
-  }
-}
-async function createNew() {
-  console.log('** NEW ** ');
-  const name = await rl.question('Name:');
-  const jersey = await rl.question('Jersey:');
-  const position = await rl.question('Position:');
-  const team = await rl.question('Team:');
-  await Player.create({
-    name: name,
-    jersey: jersey,
-    position: position,
-    team: team,
-  });
-}
-async function findPlayer() {
-  const thePlayer = await Player.findOne({
-    where: { id: 3 },
-  });
-  if (thePlayer === null) {
-    console.log('Not found');
-  } else {
-    console.log(thePlayer instanceof Player);
-    console.log(thePlayer.name);
-  }
-}
+// async function listAll() {
+//   const players = await Player.findAll();
+//   for (const player of players) {
+//     console.log('************************');
+//     console.log('ID:', player.id);
+//     console.log('Name:', player.name);
+//   }
+// }
+// async function createNew() {
+//   console.log('** NEW ** ');
+//   const name = await rl.question('Name:');
+//   const jersey = await rl.question('Jersey:');
+//   const position = await rl.question('Position:');
+//   const team = await rl.question('Team:');
+//   await Player.create({
+//     name: name,
+//     jersey: jersey,
+//     position: position,
+//     team: team,
+//   });
+// }
+// async function findPlayer() {
+//   const thePlayer = await Player.findOne({
+//     where: { id: 3 },
+//   });
+//   if (thePlayer === null) {
+//     console.log('Not found');
+//   } else {
+//     console.log(thePlayer instanceof Player);
+//     console.log(thePlayer.name);
+//   }
+// }
 
-async function updateOne() {
-  const thePlayer = await Player.findOne({
-    where: { id: 1 },
-  });
-  console.log(thePlayer.name);
-}
+// async function updateOne() {
+//   const thePlayer = await Player.findOne({
+//     where: { id: 1 },
+//   });
+//   console.log(thePlayer.name);
+// }
 
-async function main() {
-  await migrationhelper.migrate();
+// async function main() {
+//   await migrationhelper.migrate();
 
-  const thePlayer = await Player.findOne({
-    where: { id: 3 },
-  });
-  // thePlayer.name = `Patrik Arell`
-  thePlayer.team = 'Ekerö IK';
+//   const thePlayer = await Player.findOne({
+//     where: { id: 3 },
+//   });
+//   // thePlayer.name = `Patrik Arell`
+//   thePlayer.team = 'Ekerö IK';
 
-  // await thePlayer.save()
+//   // await thePlayer.save()
 
-  while (true) {
-    // await migrationhelper.migrate();
-    console.log('1. Lista alla players');
-    console.log('2. Skapa player');
-    console.log('3. Lista en player');
-    console.log('4. Ta bort player');
-    console.log('9. Avsluta');
+//   while (true) {
+//     // await migrationhelper.migrate();
+//     console.log('1. Lista alla players');
+//     console.log('2. Skapa player');
+//     console.log('3. Lista en player');
+//     console.log('4. Ta bort player');
+//     console.log('9. Avsluta');
 
-    const sel = await rl.question('Val:');
-    if (sel == '1') {
-      await listAll();
-    }
-    if (sel == '2') {
-      await createNew();
-    }
-    if (sel == '3') {
-      findPlayer();
-    }
-    if (sel == '4') {
-      deleteOne();
-    }
-    if (sel == '5') {
-      updateOne();
-    }
-    if (sel == '9') {
-      break;
-    }
-  }
-}
+//     const sel = await rl.question('Val:');
+//     if (sel == '1') {
+//       await listAll();
+//     }
+//     if (sel == '2') {
+//       await createNew();
+//     }
+//     if (sel == '3') {
+//       findPlayer();
+//     }
+//     if (sel == '4') {
+//       deleteOne();
+//     }
+//     if (sel == '5') {
+//       updateOne();
+//     }
+//     if (sel == '9') {
+//       break;
+//     }
+//   }
+// }
 
-(async () => {
-  main();
-})();
+// (async () => {
+//   main();
+// })();
 
 // ---- //
