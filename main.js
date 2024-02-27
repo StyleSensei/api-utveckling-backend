@@ -1,5 +1,5 @@
 const express = require('express');
-const { check } = require('express-validator')
+const { check } = require('express-validator');
 var cors = require('cors');
 const app = express();
 const port = 3000;
@@ -13,14 +13,15 @@ const migrationhelper = require('./migrationhelper');
 var bodyParser = require('body-parser');
 const player = require('./models/player');
 const { where } = require('sequelize');
-const { Op } = require('sequelize')
-
+const { Op } = require('sequelize');
 
 app.use(bodyParser.json());
-app.use(cors({
-  origin:'http://localhost:5501',
-  credentials:true
-}));
+app.use(
+  cors({
+    origin: 'http://localhost:5501',
+    credentials: true,
+  })
+);
 
 // function getNextId(){
 //     let m = Math.max(...players.map(player => player.id))
@@ -39,21 +40,21 @@ app.use(cors({
 // res.status(201).send('Created')
 // });
 
-app.put('/api/players/:id', async (req,res)=>{
-const id = req.params.id
- const player = await Player.findOne({
-  where: { id: id },
- })
- if(player == undefined){
-     res.status(404).send('Finns inte')
- }
- player.name = req.body.name
- player.jersey = req.body.jersey
- player.position = req.body.position
- player.team = req.body.team
+app.put('/api/players/:id', async (req, res) => {
+  const id = req.params.id;
+  const player = await Player.findOne({
+    where: { id: id },
+  });
+  if (player == undefined) {
+    res.status(404).send('Finns inte');
+  }
+  player.name = req.body.name;
+  player.jersey = req.body.jersey;
+  player.position = req.body.position;
+  player.team = req.body.team;
 
-await player.save()
- res.status(204).send('Updated')
+  await player.save();
+  res.status(204).send('Updated');
 });
 
 // app.delete('/api/players/:anvId',(req,res)=>{
@@ -67,20 +68,42 @@ await player.save()
 //     res.status(204).send('deleted')
 // });
 
-app.get('/api/players', async (req, res) => {
-  let players = await Player.findAll();
-  let result = players.map((player) => ({
+app.get('/api/players', check('q').escape(), async (req, res) => {
+  const sortCol = req.query.sortCol || 'id';
+  const sortOrder = req.query.sortOrder || 'asc';
+  const q = req.query.q || '';
+  const offset = Number(req.query.offset || 0);
+  // const page = req.query.offset || 0;
+  const limit = Number(req.query.limit || 20);
+
+  const players = await Player.findAndCountAll({
+    where: {
+      name: {
+        [Op.like]: '%' + q + '%',
+      },
+    },
+    order: [[sortCol, sortOrder]],
+    offset: offset,
+    limit: limit,
+  });
+  const total = players.count;
+  const result = players.rows.map(player => {
+    return {
     id: player.id,
     name: player.name,
     jersey: player.jersey,
     position: player.position,
     team: player.team,
-  }));
-  res.json(result);
+    }
+  });
+  return res.json({
+    total,
+    result
+  });
 });
 
-app.get('/api/players/:id' , async (req, res) => {
-  const id = req.params.id
+app.get('/api/players/:id', async (req, res) => {
+  const id = req.params.id;
   let player = await Player.findOne({
     where: { id: id },
   });
@@ -92,10 +115,7 @@ app.get('/api/players/:id' , async (req, res) => {
   res.json(player);
 });
 
-// app.get('/api/updatestefan',(req,res) => {
-//     players[0].age = players[0].age + 1
-//     res.send('KLART2');
-// });
+
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);

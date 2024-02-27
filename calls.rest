@@ -1,6 +1,10 @@
 ### Get all
 GET http://localhost:3000/api/players
 
+### get all and sort
+GET http://localhost:3000/api/players?sortCol=jersey&sortOrder=desc&limit=200&offset=0&q=
+
+
 ### Get single
 GET http://localhost:3000/api/players/1
 
