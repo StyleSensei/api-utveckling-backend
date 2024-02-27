@@ -23,22 +23,46 @@ app.use(
   })
 );
 
-// function getNextId(){
-//     let m = Math.max(...players.map(player => player.id))
-//     return m + 1
-// }
+async function getNextId(){
+  const players = await Player.findAll()
+    let m = Math.max(...players.map(player => player.id))
+    return m + 1
+}
 
-// app.post('/api/players',(req,res)=>{
-//     const player = {
+async function onCreatePlayer(req, res){
+const {name, jersey, position, team} = req.body
+
+await Player.create({
+  name:name,
+  jersey:jersey,
+  position:position,
+  team:team,
+  id:await getNextId(),
+})
+res.status(201).json({ name })
+}
+app.post('/api/players', onCreatePlayer)
+
+
+// app.post('/api/players', async (req,res)=>{
+//     const player = await Player.create({
 //         name:req.body.name,
 //         jersey: req.body.jersey,
-//         age: req.body.jersey,
+//         position: req.body.position,
+//         team: req.body.team,
 //         id:getNextId()
 //     }
-//     players.push(player)
-// console.log(req.body)
+//     )
+//     await player.save()
+//     // players.push(player)
+    
+//     console.log(req.body)
 // res.status(201).send('Created')
 // });
+
+
+
+
 
 app.put('/api/players/:id', async (req, res) => {
   const id = req.params.id;
@@ -68,13 +92,13 @@ app.put('/api/players/:id', async (req, res) => {
 //     res.status(204).send('deleted')
 // });
 
-app.get('/api/players', check('q').escape(), async (req, res) => {
+app.get('/api/players', check('q').trim().escape(), async (req, res) => {
   const sortCol = req.query.sortCol || 'id';
   const sortOrder = req.query.sortOrder || 'asc';
   const q = req.query.q || '';
   const offset = Number(req.query.offset || 0);
   // const page = req.query.offset || 0;
-  const limit = Number(req.query.limit || 20);
+  const limit = Number(req.query.limit || 30);
 
   const players = await Player.findAndCountAll({
     where: {
