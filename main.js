@@ -32,15 +32,26 @@ async function getNextId() {
 
 async function onCreatePlayer(req, res) {
   const { name, jersey, position, team } = req.body;
-
-  await Player.create({
-    name: name,
-    jersey: jersey,
-    position: position,
-    team: team,
-    id: await getNextId(),
+  const existingPlayer = await Player.findOne({
+    where: {
+      name: req.body.name,
+      jersey: req.body.jersey,
+      position: req.body.position,
+      team: req.body.team,
+    },
   });
-  res.status(201).json({ name });
+  if (existingPlayer) {
+    res.status(409).send('Player already exists');
+  } else {
+    await Player.create({
+      name: name,
+      jersey: jersey,
+      position: position,
+      team: team,
+      id: await getNextId(),
+    });
+    res.status(201).json({ name });
+  }
 }
 app.post('/api/players', validateCreatePlayer, onCreatePlayer);
 

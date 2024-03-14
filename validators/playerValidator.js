@@ -10,26 +10,11 @@ const validateCreatePlayer = [
     .withMessage('Minimum 2 characters required!')
     .escape(),
 
-  check('jersey')
-  .trim()
-  .not()
-  .isEmpty()
-  .withMessage('No jersey?')
-  .escape(),
+  check('jersey').trim().not().isEmpty().withMessage('No jersey?').escape(),
 
-  check('position')
-  .trim()
-  .not()
-  .isEmpty()
-  .withMessage('No position?')
-  .escape(),
+  check('position').trim().not().isEmpty().withMessage('No position?').escape(),
 
-  check('team')
-  .trim()
-  .not()
-  .isEmpty()
-  .withMessage('No team?')
-  .escape(),
+  check('team').trim().not().isEmpty().withMessage('No team?').escape(),
 
   (req, res, next) => {
     const errors = validationResult(req);
