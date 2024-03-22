@@ -15,6 +15,7 @@ const player = require('./models/player');
 const { where } = require('sequelize');
 const { Op } = require('sequelize');
 const { validateCreatePlayer } = require('./validators/playerValidator');
+const e = require('express');
 
 app.use(bodyParser.json());
 app.use(
@@ -55,21 +56,6 @@ async function onCreatePlayer(req, res) {
 }
 app.post('/api/players', validateCreatePlayer, onCreatePlayer);
 
-// app.post('/api/players', async (req,res)=>{
-//     const player = await Player.create({
-//         name:req.body.name,
-//         jersey: req.body.jersey,
-//         position: req.body.position,
-//         team: req.body.team,
-//         id:getNextId()
-//     }
-//     )
-//     await player.save()
-//     // players.push(player)
-
-//     console.log(req.body)
-// res.status(201).send('Created')
-// });
 
 app.put('/api/players/:id', async (req, res) => {
   const id = req.params.id;
@@ -85,19 +71,9 @@ app.put('/api/players/:id', async (req, res) => {
   player.team = req.body.team;
 
   await player.save();
-  res.status(204).send('Updated');
+  res.status(204).send({message:'Updated'});
 });
 
-// app.delete('/api/players/:anvId',(req,res)=>{
-//     console.log(req.params.anvId)
-//     let p = players.find(player=>player.id == req.params.anvId)
-//     // 404???
-//     if(p == undefined){
-//         res.status(404).send('Finns inte')
-//     }
-//     players.splice(players.indexOf(p),1)
-//     res.status(204).send('deleted')
-// });
 
 app.get('/api/players', check('q').trim().escape(), async (req, res) => {
   const sortCol = req.query.sortCol || 'name';
@@ -141,10 +117,15 @@ app.get('/api/players', check('q').trim().escape(), async (req, res) => {
       team: player.team,
     };
   });
-  return res.json({
-    total,
-    result,
-  });
+  if (total == 0) {
+    res.status(404).send({message: 'Finns inte'});
+    
+  } else {
+    return res.json({
+      total,
+      result,
+    });
+  }
 });
 
 app.get('/api/players/:id', async (req, res) => {
@@ -155,7 +136,7 @@ app.get('/api/players/:id', async (req, res) => {
 
   // let p = players.find(player => player.id == req.params.player.id)
   if (player == undefined) {
-    res.status(404).send('Finns inte');
+    res.status(404).send({message:'Finns inte'});
   }
   res.json(player);
 });
@@ -163,90 +144,3 @@ app.get('/api/players/:id', async (req, res) => {
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });
-
-// async function listAll() {
-//   const players = await Player.findAll();
-//   for (const player of players) {
-//     console.log('************************');
-//     console.log('ID:', player.id);
-//     console.log('Name:', player.name);
-//   }
-// }
-// async function createNew() {
-//   console.log('** NEW ** ');
-//   const name = await rl.question('Name:');
-//   const jersey = await rl.question('Jersey:');
-//   const position = await rl.question('Position:');
-//   const team = await rl.question('Team:');
-//   await Player.create({
-//     name: name,
-//     jersey: jersey,
-//     position: position,
-//     team: team,
-//   });
-// }
-// async function findPlayer() {
-//   const thePlayer = await Player.findOne({
-//     where: { id: 3 },
-//   });
-//   if (thePlayer === null) {
-//     console.log('Not found');
-//   } else {
-//     console.log(thePlayer instanceof Player);
-//     console.log(thePlayer.name);
-//   }
-// }
-
-// async function updateOne() {
-//   const thePlayer = await Player.findOne({
-//     where: { id: 1 },
-//   });
-//   console.log(thePlayer.name);
-// }
-
-// async function main() {
-//   await migrationhelper.migrate();
-
-//   const thePlayer = await Player.findOne({
-//     where: { id: 3 },
-//   });
-//   // thePlayer.name = `Patrik Arell`
-//   thePlayer.team = 'Ekerö IK';
-
-//   // await thePlayer.save()
-
-//   while (true) {
-//     // await migrationhelper.migrate();
-//     console.log('1. Lista alla players');
-//     console.log('2. Skapa player');
-//     console.log('3. Lista en player');
-//     console.log('4. Ta bort player');
-//     console.log('9. Avsluta');
-
-//     const sel = await rl.question('Val:');
-//     if (sel == '1') {
-//       await listAll();
-//     }
-//     if (sel == '2') {
-//       await createNew();
-//     }
-//     if (sel == '3') {
-//       findPlayer();
-//     }
-//     if (sel == '4') {
-//       deleteOne();
-//     }
-//     if (sel == '5') {
-//       updateOne();
-//     }
-//     if (sel == '9') {
-//       break;
-//     }
-//   }
-// }
-
-// (async () => {
-//   main();
-// })();
-
-// ---- //
