@@ -24,6 +24,20 @@ const validateCreatePlayer = [
   },
 ];
 
+const validateGetPlayer = [
+  check('q')
+    .trim()
+    .escape(),
+
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty())
+      return res.status(422).json({ errors: errors.array() });
+    next();
+  },
+];
+
 module.exports = {
   validateCreatePlayer,
+  validateGetPlayer
 };

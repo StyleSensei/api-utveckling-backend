@@ -14,7 +14,10 @@ var bodyParser = require('body-parser');
 const player = require('./models/player');
 const { where } = require('sequelize');
 const { Op } = require('sequelize');
-const { validateCreatePlayer } = require('./validators/playerValidator');
+const {
+  validateCreatePlayer,
+  validateGetPlayer,
+} = require('./validators/playerValidator');
 const e = require('express');
 
 app.use(bodyParser.json());
@@ -54,28 +57,8 @@ async function onCreatePlayer(req, res) {
     res.status(201).json({ name });
   }
 }
-app.post('/api/players', validateCreatePlayer, onCreatePlayer);
 
-
-app.put('/api/players/:id', async (req, res) => {
-  const id = req.params.id;
-  const player = await Player.findOne({
-    where: { id: id },
-  });
-  if (player == undefined) {
-    res.status(404).send('Finns inte');
-  }
-  player.name = req.body.name;
-  player.jersey = req.body.jersey;
-  player.position = req.body.position;
-  player.team = req.body.team;
-
-  await player.save();
-  res.status(204).send({message:'Updated'});
-});
-
-
-app.get('/api/players', check('q').trim().escape(), async (req, res) => {
+async function onGetPlayers(req, res) {
   const sortCol = req.query.sortCol || 'name';
   const sortOrder = req.query.sortOrder || 'asc';
   const q = req.query.q || '';
@@ -118,15 +101,37 @@ app.get('/api/players', check('q').trim().escape(), async (req, res) => {
     };
   });
   if (total == 0) {
-    res.status(404).send({message: 'Finns inte'});
-    
+    res.status(404).send({ message: 'Finns inte' });
   } else {
     return res.json({
       total,
       result,
     });
   }
-});
+}
+
+app.post('/api/players', validateCreatePlayer, onCreatePlayer);
+
+async function onUpdatePlayer(req, res) {
+  const id = req.params.id;
+  const player = await Player.findOne({
+    where: { id: id },
+  });
+  if (player == undefined) {
+    res.status(404).send('Finns inte');
+  }
+  player.name = req.body.name;
+  player.jersey = req.body.jersey;
+  player.position = req.body.position;
+  player.team = req.body.team;
+
+  await player.save();
+  res.status(204).send({ message: 'Updated' });
+}
+app.put('/api/players/:id', validateCreatePlayer, onUpdatePlayer);
+
+
+app.get('/api/players', validateGetPlayer, onGetPlayers);
 
 app.get('/api/players/:id', async (req, res) => {
   const id = req.params.id;
@@ -136,7 +141,7 @@ app.get('/api/players/:id', async (req, res) => {
 
   // let p = players.find(player => player.id == req.params.player.id)
   if (player == undefined) {
-    res.status(404).send({message:'Finns inte'});
+    res.status(404).send({ message: 'Finns inte' });
   }
   res.json(player);
 });
