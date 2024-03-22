@@ -1,24 +1,24 @@
 const express = require('express');
-const { check } = require('express-validator');
+// const { check } = require('express-validator');
 var cors = require('cors');
 const app = express();
 const port = 3000;
-const readline = require('readline/promises');
-const { stdin: input, stdout: output } = require('process');
-const rl = readline.createInterface({ input, output });
+// const readline = require('readline/promises');
+// const { stdin: input, stdout: output } = require('process');
+// const rl = readline.createInterface({ input, output });
 
-const { sequelize, Player } = require('./models');
-const migrationhelper = require('./migrationhelper');
+const { Player } = require('./models');
+// const migrationhelper = require('./migrationhelper');
 
-var bodyParser = require('body-parser');
-const player = require('./models/player');
-const { where } = require('sequelize');
+const bodyParser = require('body-parser');
+// const player = require('./models/player');
+// const { where } = require('sequelize');
 const { Op } = require('sequelize');
 const {
   validateCreatePlayer,
   validateGetPlayer,
 } = require('./validators/playerValidator');
-const e = require('express');
+// const e = require('express');
 
 app.use(bodyParser.json());
 app.use(
@@ -110,8 +110,6 @@ async function onGetPlayers(req, res) {
   }
 }
 
-app.post('/api/players', validateCreatePlayer, onCreatePlayer);
-
 async function onUpdatePlayer(req, res) {
   const id = req.params.id;
   const player = await Player.findOne({
@@ -128,23 +126,26 @@ async function onUpdatePlayer(req, res) {
   await player.save();
   res.status(204).send({ message: 'Updated' });
 }
-app.put('/api/players/:id', validateCreatePlayer, onUpdatePlayer);
 
-
-app.get('/api/players', validateGetPlayer, onGetPlayers);
-
-app.get('/api/players/:id', async (req, res) => {
+async function onGetSinglePlayer(req, res) {
   const id = req.params.id;
-  let player = await Player.findOne({
+  const player = await Player.findOne({
     where: { id: id },
   });
 
-  // let p = players.find(player => player.id == req.params.player.id)
   if (player == undefined) {
     res.status(404).send({ message: 'Finns inte' });
   }
   res.json(player);
-});
+}
+
+app.post('/api/players', validateCreatePlayer, onCreatePlayer);
+
+app.put('/api/players/:id', validateCreatePlayer, onUpdatePlayer);
+
+app.get('/api/players', validateGetPlayer, onGetPlayers);
+
+app.get('/api/players/:id', validateGetPlayer, onGetSinglePlayer);
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);

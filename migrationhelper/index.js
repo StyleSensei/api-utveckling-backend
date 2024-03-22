@@ -1,4 +1,4 @@
-const fs = require('fs');
+// const fs = require('fs');
 const Umzug = require('umzug');
 const path = require('path');
 const Sequelize = require('sequelize');
