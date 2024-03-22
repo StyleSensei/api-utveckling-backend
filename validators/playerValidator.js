@@ -25,9 +25,7 @@ const validateCreatePlayer = [
 ];
 
 const validateGetPlayer = [
-  check('q')
-    .trim()
-    .escape(),
+  check('q').trim().escape(),
 
   (req, res, next) => {
     const errors = validationResult(req);
@@ -39,5 +37,5 @@ const validateGetPlayer = [
 
 module.exports = {
   validateCreatePlayer,
-  validateGetPlayer
+  validateGetPlayer,
 };

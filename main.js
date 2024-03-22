@@ -1,24 +1,14 @@
 const express = require('express');
-// const { check } = require('express-validator');
 var cors = require('cors');
 const app = express();
 const port = 3000;
-// const readline = require('readline/promises');
-// const { stdin: input, stdout: output } = require('process');
-// const rl = readline.createInterface({ input, output });
-
 const { Player } = require('./models');
-// const migrationhelper = require('./migrationhelper');
-
 const bodyParser = require('body-parser');
-// const player = require('./models/player');
-// const { where } = require('sequelize');
 const { Op } = require('sequelize');
 const {
   validateCreatePlayer,
   validateGetPlayer,
 } = require('./validators/playerValidator');
-// const e = require('express');
 
 app.use(bodyParser.json());
 app.use(
